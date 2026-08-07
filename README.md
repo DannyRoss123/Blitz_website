@@ -5,6 +5,8 @@ Players list, builds `data/output/all_stars_2024_2026.csv`, and serves a
 localhost website that filters/sorts it. See `WRITEUP.md` for the narrative
 on how this was approached.
 
+**Live demo (optional Step 3 bonus):** https://dannyross123.github.io/Blitz_website/website/
+
 ## Reviewer quickstart
 
 ```bash
@@ -123,10 +125,11 @@ don't appear on it. No name-collision warnings were logged during the build
 
 All optional items in the assignment were completed:
 
-- **Public deployment (Step 3):** live at **[TODO: fill in after GitHub Pages is
-  enabled]**. The site is fully self-contained (`website/data/all_stars_2024_2026.json`
-  is written next to `index.html` at build time and fetched with a relative path), so
-  the same `website/` folder serves both locally and on GitHub Pages with no changes.
+- **Public deployment (Step 3):** live at
+  **https://dannyross123.github.io/Blitz_website/website/**. The site is fully
+  self-contained (`website/data/all_stars_2024_2026.json` is written next to
+  `index.html` at build time and fetched with a relative path), so the same
+  `website/` folder serves both locally and on GitHub Pages with no changes.
 - **Bonus appendix CSV:** `make appendix` (or `python build_appendix.py`) fetches and
   caches the actual `/allstar/{year}-allstar-game.shtml` box scores (under
   `data/raw/allstar/`) and cross-checks every player who appeared in the game against
