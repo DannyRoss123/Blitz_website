@@ -1,0 +1,3 @@
+# Only needed for the optional Postgres extra-credit path (make postgres-load).
+# The core pipeline (scrape/build/serve) never imports this.
+psycopg2-binary==2.9.10

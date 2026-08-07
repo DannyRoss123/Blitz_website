@@ -93,14 +93,73 @@ team page" instruction — the reference apparently reformats these.
 
 ## Website
 
-Static HTML/CSS/vanilla JS, no build step, fetching a JSON mirror of the CSV (`app.js`
-does the filtering/sorting client-side). Served from the repo root so it can reach
-`data/output/` by relative path — no backend needed.
+Static HTML/CSS/vanilla JS, no build step. `build.py` writes a JSON mirror of the CSV
+directly next to `index.html` (`website/data/all_stars_2024_2026.json`), and `app.js`
+fetches it with a relative path and does all filtering/sorting client-side — no
+backend, and no dependency on which directory it's served from, which is what makes
+the same `website/` folder work identically on `localhost` and on GitHub Pages.
+
+## Bonus: All-Star Game roster cross-check
+
+The FAQ mentions an optional cross-check against `/allstar/{year}-allstar-game.shtml`
+and, separately, a bonus appendix CSV for any gaps found. `build_appendix.py` fetches
+and caches those three box-score pages the same cache-first way as the main scraper,
+parses every player who actually appeared in the game (unwrapping BR's HTML-comment-
+wrapped tables, same trick as the main team-page parser), and diffs that list against
+our `[AS]`-tagged dataset per season. Result: 59/63/61 players appeared across
+2024/2025/2026, and **zero** were missing from our dataset — a clean independent
+confirmation that the team-page `[AS]` method isn't missing anyone who actually played.
+(This can only catch false negatives in one direction: a selected All-Star who didn't
+play in the game, e.g. an injury replacement, correctly won't appear in the box score
+even though they're legitimately an All-Star per the team-page method — so an empty
+gap list is the expected good outcome, not a coincidence of a narrow check.)
+
+## Bonus: Postgres
+
+`postgres/schema.sql` mirrors the CSV's grain and columns 1:1 (see `src/models.py` for
+the authoritative column list), with one deliberate deviation: `pit_ip` is stored as
+`TEXT`, not `NUMERIC`, because BR displays innings pitched in thirds (`63.1` means 63
+and ⅓ innings, not 63.1 as a decimal) — storing it numerically would silently imply
+the wrong arithmetic. `load_postgres.py` upserts on the same primary key as the CSV, so
+rerunning it after a rebuild is safe. Tested end-to-end against a real `postgres:16`
+Docker container (not just written and assumed correct): loaded all 256 rows, spot-
+checked a batting row (Judge) and a pitching row (Skenes, confirming `bat_hr` is
+correctly `NULL` on a pitching row and `pit_ip` preserved as `"133.0"` verbatim), and
+confirmed a second run doesn't duplicate anything.
+
+## Public deployment
+
+Deployed to GitHub Pages from the same `website/` folder used for local `make serve` —
+no separate build/deploy step, since the JSON data file already lives inside the
+folder rather than depending on repo-root serving.
+
+## What I'd do in production
+
+- Move the scraper off a single-process, single-machine cadence: a queue-based fetcher
+  (even just a persistent job table) would survive process crashes mid-run without
+  relying on cache-checking as the resumability mechanism, and would let scraping scale
+  across more sources without a hand-rolled rate limiter.
+- Alert on scrape drift, not just report it: the mojibake and unlinked-`AS` bugs were
+  both *silent* — they dropped/corrupted data without any check failing. In production
+  I'd add a row-count/column-null-rate check per source page that pages someone if a
+  parser's yield suddenly drops (e.g. "team page usually yields 2-5 AS rows, got 0" is
+  a signal worth surfacing immediately, not discovering via an external diff).
+- Replace the from-scratch caching layer with a real HTTP cache (e.g. `requests-cache`
+  backed by SQLite) and a real task scheduler (Airflow/Dagster/cron+lock) instead of a
+  single `scrape.py` invocation, so partial seasons, mid-season injury replacements, and
+  new All-Star Game selections can be picked up incrementally instead of via full reruns.
+- Swap the hand-written parser-fixture tests for snapshot tests against a larger corpus
+  of saved real pages (one per team, across a few seasons) to catch markup drift BR
+  makes over time, since this whole project is built on assumptions about `data-stat`
+  attribute names that could change without notice.
+- For the website: add the "Show top 100 but not an All-Star" view as a second toggle
+  (currently intentionally out of scope, since the CSV's grain is All-Star rows only),
+  and paginate/virtualize the table if the dataset ever grows well past a few hundred
+  rows.
 
 ## What I'd improve with more time
 
-Add a second, independent cross-check against `/allstar/{year}-allstar-game.shtml`
-roster pages to catch any All-Star whose team-page `[AS]` tag might be missing; widen
-the player-bio fallback path for the rare page without the JSON-LD block; and add a
-"only in Show top 100, not an All-Star" note to the README, since that's a case the
-current join intentionally never surfaces but a reviewer might expect to see discussed.
+Widen the player-bio fallback path for the rare page without the JSON-LD block, and add
+a short note in the README about the "Show top 100 but not an All-Star" case, since
+that's a case the current join intentionally never surfaces but a reviewer might expect
+to see discussed.

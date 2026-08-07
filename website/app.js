@@ -1,5 +1,7 @@
 (function () {
-  const DATA_URL = "/data/output/all_stars_2024_2026.json";
+  // Relative path -- works whether served from the repo root, from within
+  // website/ directly, or from any static host (GitHub Pages, Vercel, ...).
+  const DATA_URL = "data/all_stars_2024_2026.json";
 
   let allRows = [];
   const state = {
@@ -238,7 +240,7 @@
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       allRows = await res.json();
     } catch (err) {
-      summaryEl.textContent = `Failed to load ${DATA_URL}: ${err.message}. Run "python build.py" first, then serve from the repo root with "make serve".`;
+      summaryEl.textContent = `Failed to load ${DATA_URL}: ${err.message}. Run "python build.py" first (writes website/data/all_stars_2024_2026.json), then "make serve".`;
       return;
     }
     renderSummary();

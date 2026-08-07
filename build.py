@@ -19,6 +19,11 @@ DATA_RAW = Path(__file__).parent / "data" / "raw"
 OUTPUT_DIR = Path(__file__).parent / "data" / "output"
 CSV_PATH = OUTPUT_DIR / "all_stars_2024_2026.csv"
 JSON_PATH = OUTPUT_DIR / "all_stars_2024_2026.json"
+# A copy lives alongside the site so it can be fetched with a relative path
+# -- makes the site self-contained and portable to any static host (GitHub
+# Pages, Vercel, Netlify, or `python -m http.server` from any directory)
+# instead of depending on being served from the repo root.
+WEBSITE_JSON_PATH = Path(__file__).parent / "website" / "data" / "all_stars_2024_2026.json"
 
 TEAM_FILE_RE = re.compile(r"^([A-Z0-9]+)_(\d{4})\.shtml$")
 
@@ -184,7 +189,10 @@ def build():
         writer.writeheader()
         for row in out_rows:
             writer.writerow(row)
-    JSON_PATH.write_text(json.dumps(out_rows, default=str), encoding="utf-8")
+    json_text = json.dumps(out_rows, default=str)
+    JSON_PATH.write_text(json_text, encoding="utf-8")
+    WEBSITE_JSON_PATH.parent.mkdir(parents=True, exist_ok=True)
+    WEBSITE_JSON_PATH.write_text(json_text, encoding="utf-8")
 
     print(f"Wrote {len(out_rows)} rows ({len(seasons_by_player)} unique players) to {CSV_PATH}")
     return out_rows

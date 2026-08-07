@@ -19,11 +19,11 @@ pip install -r requirements.txt
 python scrape.py
 python build.py     # writes data/output/all_stars_2024_2026.csv, runs validate.py
 
-# 4. Start the local website (serves the repo root so the site can fetch data/output/*)
-make serve           # or: python -m http.server 8080
+# 4. Start the local website
+make serve           # or: python -m http.server 8080 --directory website
 
 # 5. Open in browser
-open http://localhost:8080/website/     # exact URL — note the /website/ path
+open http://localhost:8080/
 ```
 
 Run the test suite with `make test` (or `python -m pytest tests/ -v`).
@@ -98,23 +98,54 @@ caught two real bugs before submission, both now fixed and covered by tests:
   rather than a live BR mirror at the same instant.
 
 **On the ~64–68/season guidance:** that figure is *unique All-Star players*
-per season roster. Our **row** counts (78–89) run higher because the primary
+per season roster. Our **row** counts (83–89) run higher because the primary
 key is `(player_id, season_id, stat_type, team_id)`, not `(player_id,
 season_id)` — a two-way player (Ohtani) contributes a batting row *and* a
 pitching row in the same season, and a player traded mid-season while an
 All-Star contributes one row per team. Unique-player counts per season
-(76/81/71) sit much closer to the 64–68 guidance; the modest excess is real
+(76/81/77) sit much closer to the 64–68 guidance; the modest excess is real
 All-Star-game participants plus a small number of injury-replacement/final-
-vote selections that also carry the `[AS]` tag on their team page. 2026 is
-lower because the season is still in progress at scrape time
-(`scraped_at` on every row records exactly when).
+vote selections that also carry the `[AS]` tag on their team page.
 
-**Show top-100 match rate:** 67 of 171 unique All-Stars (39%) matched the
+**Independent cross-check:** `build_appendix.py` (optional bonus, see below)
+fetches the actual All-Star Game box scores and confirms every player who
+played in the game across all three years is present in our dataset — 0
+gaps found.
+
+**Show top-100 match rate:** 79 of 177 unique All-Stars (~45%) matched the
 Show top-100 list by normalized name. This is expected — the Show list only
 covers 100 players total across all of MLB, so most All-Stars (correctly)
 don't appear on it. No name-collision warnings were logged during the build
 (see `build.py`'s `_load_show_lookup`, which would flag it if two different
 `player_id`s normalized to the same Show name).
+
+## Optional/bonus items
+
+All optional items in the assignment were completed:
+
+- **Public deployment (Step 3):** live at **[TODO: fill in after GitHub Pages is
+  enabled]**. The site is fully self-contained (`website/data/all_stars_2024_2026.json`
+  is written next to `index.html` at build time and fetched with a relative path), so
+  the same `website/` folder serves both locally and on GitHub Pages with no changes.
+- **Bonus appendix CSV:** `make appendix` (or `python build_appendix.py`) fetches and
+  caches the actual `/allstar/{year}-allstar-game.shtml` box scores (under
+  `data/raw/allstar/`) and cross-checks every player who appeared in the game against
+  our `[AS]`-tagged dataset, writing `data/output/allstar_roster_gaps_appendix.csv`.
+  Currently empty — 0 gaps found across all three seasons (183 player-appearances
+  checked). See WRITEUP.md for what this check can and can't catch.
+- **Postgres (extra credit):** `postgres/schema.sql` + `load_postgres.py` load the same
+  CSV into Postgres, upserting on the same primary key so reruns are safe. Not required
+  for the core submission — CSV remains authoritative. To try it:
+  ```bash
+  pip install -r requirements-postgres.txt   # or: make postgres-install
+  make postgres-up      # docker run postgres:16 on localhost:5432
+  make postgres-load    # python load_postgres.py
+  make postgres-down    # tear down when done
+  ```
+  Tested end-to-end against a real `postgres:16` container: all 256 rows load, spot
+  checks match the CSV, and a second run doesn't duplicate anything.
+- **"What I'd do in production"** section is in `WRITEUP.md` (used instead of a screen
+  recording, per the assignment's "either/or" framing).
 
 ## Known limitations
 
@@ -136,14 +167,19 @@ don't appear on it. No name-collision warnings were logged during the build
 scrape.py             # network layer: cache-first fetch of BR + Show pages
 build.py               # parses cached HTML -> CSV + JSON (no network)
 validate.py             # required validation checks, run automatically by build.py
+build_appendix.py        # optional bonus: All-Star Game roster cross-check
+load_postgres.py           # optional extra credit: load CSV into Postgres
 src/
   http_client.py        # caching, rate-limiting, retry/backoff HTTP client
   br_parser.py           # team page + player page parsing
   show_parser.py          # Show top-100 parsing + name normalization
-  models.py                # CSV column schema shared by build.py and tests
-data/raw/{leagues,teams,players,the_show}/   # cached HTML (+ .meta.json sidecars)
-data/output/all_stars_2024_2026.csv           # required deliverable
-data/output/all_stars_2024_2026.json           # same data, for the website fetch
-website/                                        # static site: index.html, app.js, styles.css
-tests/                                           # pytest, fixtures under tests/fixtures/
+  allstar_parser.py        # All-Star Game box score parsing (bonus appendix)
+  models.py                 # CSV column schema shared by build.py and tests
+postgres/schema.sql       # optional extra credit: Postgres table schema
+data/raw/{leagues,teams,players,the_show,allstar}/   # cached HTML (+ .meta.json sidecars)
+data/output/all_stars_2024_2026.csv                   # required deliverable
+data/output/all_stars_2024_2026.json                   # same data, JSON form
+data/output/allstar_roster_gaps_appendix.csv             # optional bonus appendix
+website/                     # static site: index.html, app.js, styles.css, data/ (JSON copy)
+tests/                         # pytest, fixtures under tests/fixtures/
 ```
