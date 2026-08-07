@@ -3,6 +3,7 @@ __pycache__/
 *.pyc
 .pytest_cache/
 .scratch/
+.scratch_ref/
 scrape.log
 node_modules/
 .idea/

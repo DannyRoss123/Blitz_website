@@ -17,15 +17,21 @@ def test_parse_team_page_batting():
     assert parsed["team_losses"] == 44
     assert parsed["team_record"] == "56-44"
 
-    # Only the AS-flagged batter should be included; the header-repeat row
+    # Only AS-flagged batters should be included; the header-repeat row
     # and the non-AS bench player must both be excluded.
-    assert len(parsed["batting_rows"]) == 1
+    assert len(parsed["batting_rows"]) == 2
     row = parsed["batting_rows"][0]
     assert row["player_id"] == "allstaal01"
     assert row["full_name"] == "All Star"
     assert row["primary_position"] == "CF"
     assert row["stats"]["bat_HR"] == "58"
     assert row["stats"]["bat_OPS"] == "1.159"
+
+    # BR sometimes renders the AS award as plain text with no
+    # /allstar/{year} link yet (seen on live 2026 in-progress-season pages,
+    # e.g. Ceddanne Rafaela/BOS) -- must still be detected as an All-Star.
+    unlinked_as_row = parsed["batting_rows"][1]
+    assert unlinked_as_row["player_id"] == "rookire01"
 
 
 def test_parse_team_page_pitching_inside_html_comment():

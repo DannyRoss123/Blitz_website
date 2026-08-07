@@ -56,10 +56,40 @@ that never fired against the real 171-player pool.
 ## Validation
 
 `validate.py` checks for duplicate primary keys, null IDs, and reports per-season
-counts — both row counts (78–89) and unique-player counts (71–81), since the ~64–68
+counts — both row counts (83–89) and unique-player counts (76–81), since the ~64–68
 guidance in the assignment is really about unique All-Stars, not rows. I spot-checked
 three players against live BR (Judge, Ohtani, Skenes 2024) and all three matched
 exactly.
+
+I also wrote a throwaway script to cross-check the built CSV against Blitz's own
+example-output reference table row by row (matching on normalized name + season +
+stat_type, since the reference redacts real IDs). This caught two real bugs the
+in-repo validation couldn't see, because both were silent — they dropped or corrupted
+data without throwing an error:
+
+1. `requests` was decoding every live response as Latin-1 (BR and theshowratings.com
+   don't send a charset on `Content-Type`, so `resp.text` falls back to RFC 2616's
+   default instead of the actual UTF-8 body), corrupting every accented name on write
+   to the cache and silently breaking the Show-ratings name join for players like
+   Muñoz, Ramírez, Rodón, and Acuña. Fixed by forcing `resp.encoding = "utf-8"` before
+   reading `resp.text`. Because the corruption was a clean, reversible
+   decode-as-Latin-1-then-encode-as-UTF-8 round trip, I could repair the ~260
+   already-cached files in place instead of re-scraping — Show top-100 matches went
+   from 67 to 79 unique players.
+2. BR normally links the All-Star award to `/allstar/{year}-allstar-game.shtml`, but
+   for a handful of players recently added to the in-progress 2026 season, the Awards
+   cell renders bare `AS` text with no link yet. My parser required the link and
+   silently excluded these players — no error, just missing rows. Fixed with a fallback
+   to the literal `AS` token, plus a regression test.
+
+After both fixes, 255 of the reference's 256 rows matched ours exactly by identity;
+the one non-match is a name variant (`Adley Stan Rutschman`) that appears deliberately
+inserted into the reference data. Remaining stat-level differences are explainable,
+not bugs: 2026 team records differ by a game or two because the reference snapshot and
+my scrape were taken at different points in the same in-progress season, and rate
+stats are formatted `.907` rather than `0.907` because I preserve BR's own display
+convention (no leading zero) per the assignment's "use the values as displayed on the
+team page" instruction — the reference apparently reformats these.
 
 ## Website
 

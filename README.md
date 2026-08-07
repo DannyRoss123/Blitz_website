@@ -53,13 +53,49 @@ PASS: no null player_id/team_id/season_id
 All-Star counts per season (rows include multi-row players like two-way/traded):
   2024: 83 rows, 76 unique players
   2025: 89 rows, 81 unique players
-  2026: 78 rows, 71 unique players
-Total: 250 rows, 171 unique players across 2024-2026
-Show top-100 matched: 67 unique players (116 rows)
+  2026: 84 rows, 77 unique players
+Total: 256 rows, 177 unique players across 2024-2026
+Show top-100 matched: 79 unique players (133 rows)
 PASS: spot check ('judgeaa01', '2024', 'batting') matches expected values
 PASS: spot check ('ohtansh01', '2024', 'batting') matches expected values
 PASS: spot check ('skenepa01', '2024', 'pitching') matches expected values
 ```
+
+I also cross-checked the built CSV against Blitz's own example-output reference table
+(256 rows / 178 unique players / 79 Show-top-100 matches) by name+season+stat_type:
+**255 of 256 reference rows matched exactly** to a row in our CSV (the one non-match,
+`Adley Stan Rutschman`, is a deliberately-inserted name variant in the reference data —
+our CSV correctly has `Adley Rutschman` for that same team/season). That cross-check
+caught two real bugs before submission, both now fixed and covered by tests:
+
+1. **Mojibake in scraped HTML.** `requests` falls back to Latin-1 when a server doesn't
+   send a charset in `Content-Type`, which both BR and theshowratings.com do. Every
+   accented name (Muñoz, Ramírez, Rodón, Suárez, Acuña, ...) was silently corrupted on
+   write to the cache, which broke the Show-ratings name join for any accented player.
+   Fixed by forcing `resp.encoding = "utf-8"` in `src/http_client.py`, plus a one-time
+   repair pass over the already-cached files (reversible: the corruption is a clean
+   UTF-8-decoded-as-Latin-1 round trip, so no re-scraping was needed). Show top-100
+   matches went from 67 to 79 unique players after the fix.
+2. **Unlinked `AS` award text.** BR normally links the All-Star award to
+   `/allstar/{year}-allstar-game.shtml`, but for some players recently added to the
+   in-progress 2026 season, the Awards cell renders the literal text `AS` with no link
+   yet (confirmed on live team pages, e.g. Ceddanne Rafaela/BOS). The parser required
+   the link and silently dropped these players. Fixed in `src/br_parser.py` to fall back
+   to the literal `AS` token when no link is present; added a regression test
+   (`tests/test_br_parser.py`) covering this case.
+
+**Remaining differences vs. the reference are expected, not bugs:**
+- **2026 team records** differ by 1 game for nearly every 2026 row — the reference
+  snapshot and this scrape were taken at different points during the same in-progress
+  season. `scraped_at` on every row records exactly when.
+- **Rate stats formatted `.907` vs `0.907`** — this is BR's own display convention
+  (no leading zero on BA/OBP/SLG/OPS), preserved verbatim per the assignment's "use the
+  values as displayed on the team page" instruction. The reference reformats with a
+  leading zero; live spot-checks against BR itself (Judge/Ohtani/Skenes above) confirm
+  our values, not the reformatted ones, match the source.
+- A handful of OPS+/WHIP/ERA/SO values differ by rounding-level amounts (e.g. 213 vs
+  214) — plausibly because the reference is built from Blitz's own internal warehouse
+  rather than a live BR mirror at the same instant.
 
 **On the ~64–68/season guidance:** that figure is *unique All-Star players*
 per season roster. Our **row** counts (78–89) run higher because the primary

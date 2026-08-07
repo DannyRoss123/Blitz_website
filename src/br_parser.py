@@ -91,6 +91,14 @@ def _parse_stat_table(soup, table_id, header_map):
             for a in awards_cell.find_all("a", href=True)
         )
         if not is_all_star:
+            # BR normally links the AS award to /allstar/{year}-allstar-
+            # game.shtml, but for some recently-tagged players on the
+            # current in-progress season it renders the bare "AS" token
+            # with no link yet (confirmed against live team pages, e.g.
+            # 2026 Ceddanne Rafaela/BOS). Fall back to the literal token.
+            award_tokens = [t.strip() for t in awards_cell.get_text(strip=True).split(",")]
+            is_all_star = "AS" in award_tokens
+        if not is_all_star:
             continue
 
         stats = {col: _cell_text(tr, data_stat) for data_stat, col in header_map.items()}
