@@ -1,0 +1,222 @@
+:root {
+  --bg: #0f1115;
+  --panel: #171a21;
+  --border: #2a2e37;
+  --text: #e7e9ee;
+  --text-dim: #9aa1b1;
+  --accent: #5b8cff;
+  --accent-dim: #2a3a66;
+  --stripe: #14161c;
+  --gold: #d9b95b;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  padding: 0 0 3rem;
+}
+
+.page-header {
+  padding: 1.5rem 1.25rem 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.page-header h1 {
+  margin: 0 0 0.25rem;
+  font-size: 1.5rem;
+}
+
+.subtitle {
+  margin: 0 0 0.75rem;
+  color: var(--text-dim);
+  font-size: 0.9rem;
+}
+
+.summary {
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+}
+
+.summary strong { color: var(--text); }
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+  align-items: flex-end;
+}
+
+.control-label {
+  display: block;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-dim);
+  margin-bottom: 0.35rem;
+}
+
+.pill-group {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.pill {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 999px;
+  padding: 0.35rem 0.85rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.pill:hover { border-color: var(--accent); }
+
+.pill.active {
+  background: var(--accent-dim);
+  border-color: var(--accent);
+  color: #cfe0ff;
+}
+
+.search-group { flex: 1; min-width: 220px; }
+
+#search-input {
+  width: 100%;
+  max-width: 420px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  padding: 0.5rem 0.75rem;
+  font-size: 0.9rem;
+}
+
+.table-section { padding: 1rem 1.25rem; }
+
+.table-scroll {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 760px;
+  font-size: 0.85rem;
+}
+
+thead th {
+  position: sticky;
+  top: 0;
+  background: var(--panel);
+  text-align: left;
+  padding: 0.6rem 0.7rem;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+th.sortable { cursor: pointer; user-select: none; }
+th.sortable:hover { color: var(--accent); }
+th.sorted-asc::after { content: " ▲"; font-size: 0.7em; }
+th.sorted-desc::after { content: " ▼"; font-size: 0.7em; }
+
+tbody tr.data-row {
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+}
+
+tbody tr.data-row:nth-child(4n+1) { background: var(--stripe); }
+tbody tr.data-row:hover { background: var(--accent-dim); }
+
+td { padding: 0.55rem 0.7rem; vertical-align: top; }
+
+.player-name { font-weight: 600; }
+.player-meta { color: var(--text-dim); font-size: 0.78rem; }
+
+.badge {
+  display: inline-block;
+  padding: 0.1rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  border: 1px solid var(--border);
+}
+
+.badge.batting { color: #8fd18f; border-color: #2f5c34; }
+.badge.pitching { color: #7fb3ff; border-color: #274a7a; }
+
+.ovr {
+  font-weight: 700;
+  color: var(--gold);
+}
+
+.ovr-empty { color: var(--text-dim); }
+
+.br-link {
+  color: var(--accent);
+  text-decoration: none;
+  font-size: 0.85rem;
+}
+.br-link:hover { text-decoration: underline; }
+
+.detail-row td {
+  background: var(--panel);
+  padding: 0.9rem 1.2rem;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 0.5rem 1.5rem;
+  font-size: 0.82rem;
+}
+
+.detail-grid div span.k {
+  display: block;
+  color: var(--text-dim);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.empty-state {
+  color: var(--text-dim);
+  padding: 1.5rem;
+  text-align: center;
+}
+
+.page-footer {
+  padding: 1.5rem 1.25rem 0;
+  color: var(--text-dim);
+  font-size: 0.8rem;
+}
+.page-footer a { color: var(--accent); }
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #f7f8fa;
+    --panel: #ffffff;
+    --border: #dfe3ea;
+    --text: #1b1f27;
+    --text-dim: #616a7a;
+    --accent: #2f5fd6;
+    --accent-dim: #e3ebff;
+    --stripe: #f0f2f6;
+    --gold: #a8790b;
+  }
+}
+
+@media (max-width: 640px) {
+  .controls { gap: 0.85rem; }
+  table { min-width: 640px; font-size: 0.8rem; }
+}

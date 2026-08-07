@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MLB All-Star Aggregator (2024-2026)</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="page-header">
+  <h1>MLB All-Star Aggregator</h1>
+  <p class="subtitle">2024-2026 All-Stars, scraped from Baseball-Reference &amp; The Show Ratings</p>
+  <div id="summary" class="summary">Loading…</div>
+</header>
+
+<section class="controls" aria-label="Filters">
+  <div class="control-group" role="group" aria-label="Season filter">
+    <span class="control-label">Season</span>
+    <div class="pill-group" id="season-filter">
+      <button class="pill active" data-value="all">All seasons</button>
+      <button class="pill" data-value="2026">2026</button>
+      <button class="pill" data-value="2025">2025</button>
+      <button class="pill" data-value="2024">2024</button>
+    </div>
+  </div>
+
+  <div class="control-group" role="group" aria-label="Show top 100 filter">
+    <span class="control-label">The Show</span>
+    <div class="pill-group" id="show-filter">
+      <button class="pill active" data-value="all">All players</button>
+      <button class="pill" data-value="top100">Show top 100</button>
+      <button class="pill" data-value="not-top100">Not in Show top 100</button>
+    </div>
+  </div>
+
+  <div class="control-group search-group">
+    <label class="control-label" for="search-input">Search</label>
+    <input id="search-input" type="search" placeholder="Search player, team, or player id…" autocomplete="off">
+  </div>
+</section>
+
+<section class="table-section">
+  <div class="table-scroll">
+    <table id="results-table">
+      <thead>
+        <tr>
+          <th data-sort="all_star_selections_2024_2026" class="sortable sorted-desc">All-Star yrs</th>
+          <th data-sort="season_id" class="sortable">Season</th>
+          <th data-sort="full_name" class="sortable">Player</th>
+          <th data-sort="stat_type" class="sortable">Type</th>
+          <th data-sort="team_name" class="sortable">Team</th>
+          <th data-sort="team_record" class="sortable">Record</th>
+          <th data-sort="show_overall_rating" class="sortable">Show OVR</th>
+          <th>Key stats</th>
+          <th>BR</th>
+        </tr>
+      </thead>
+      <tbody id="results-body"></tbody>
+    </table>
+  </div>
+  <p id="empty-state" class="empty-state" hidden>No rows match the current filters.</p>
+</section>
+
+<template id="detail-row-template">
+  <tr class="detail-row" hidden>
+    <td colspan="9">
+      <div class="detail-grid"></div>
+    </td>
+  </tr>
+</template>
+
+<footer class="page-footer">
+  <p>Data: <a href="https://www.baseball-reference.com/" target="_blank" rel="noopener">Baseball-Reference.com</a>
+     &middot; <a href="https://www.theshowratings.com/lists/top-100-players" target="_blank" rel="noopener">The Show Ratings Top 100</a></p>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>
